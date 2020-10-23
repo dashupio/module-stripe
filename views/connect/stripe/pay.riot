@@ -1,0 +1,88 @@
+<connect-stripe-pay>
+  <div class="connect-stripe-pay">
+    <div id="stripe-element" />
+    <div class="alert alert-danger mt-3" if={ state.error }>
+      { state.error }
+    </div>
+  </div>
+
+  <script>
+
+		// export default
+    export default {
+      components : {
+      },
+
+      onBeforeMount(props, state) {
+        // check for stripe script
+        if (!document.getElementById('stripe-script')) {
+          // create script
+          const stripeScript = document.createElement('script');
+          stripeScript.id = 'stripe-script';
+          stripeScript.src = 'https://js.stripe.com/v3/';
+          stripeScript.type = 'text/javascript';
+
+          // append
+          document.querySelector('body').appendChild(stripeScript);
+        }
+
+        // create stripe
+        this.stripe = new Promise(async (resolve) => {
+          // await
+          const Stripe = await new Promise((res) => {
+            // let
+            let checkInterval = null;
+
+            // check stripe
+            const checkStripe = () => {
+              // check stripe
+              if (typeof window.Stripe !== 'undefined') {
+                // clear interval
+                clearInterval(checkInterval);
+                res(window.Stripe);
+              }
+            };
+
+            // check stripe
+            checkInterval = setInterval(checkStripe, 50);
+          });
+
+          // return public key
+          resolve(Stripe(props.connect.client));
+        });
+      },
+
+      onMounted() {
+        // mount stripe element
+        this.stripe.then((stripe) => {
+          // create elements
+          const elements = stripe.elements();
+          const card = elements.create('card');
+
+          // mount
+          card.mount('#stripe-element');
+
+          // on change
+          card.on('change', (event) => {
+            if (event.complete) {
+              // props enable
+              this.update({ error : null });
+
+              // create method
+              stripe.createToken(card).then((result) => {
+                // payment method
+                this.props.enable(this.props.connect, {
+                  token : result.token.id
+                });
+              });
+            } else if (event.error) {
+              // props disable
+              this.props.disable();
+              this.update({ error : event.error.message });
+            }
+          });
+        });
+      },
+    }
+  </script>
+</connect-stripe-pay>

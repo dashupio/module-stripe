@@ -1,0 +1,31 @@
+<connect-stripe-view>
+  <div class="card mb-3">
+    <div class="card-body">
+      <button class="btn btn-info mr-2">
+        <i class="fab fa-stripe" />
+      </button>
+      Payment to <b class="mr-1">Stripe</b>for<b class="mx-1">{ `$${(dotProp.get(props.payment, 'amount.0') || 0).toFixed(2)}` } { dotProp.get(props.payment, 'amount.1') || 'USD' } { dotProp.get(props.payment, 'amount.2') ? props.payment.amount[2] : '' }</b> { props.payment.status }.
+    </div>
+  </div>
+
+  <script>
+    // dotProp
+    import dotProp from 'dot-prop';
+
+		// export default
+    export default {
+      components : {
+      },
+
+      onBeforeMount(props, state) {
+        
+        // set dotprop
+        this.dotProp = dotProp;
+      },
+
+      onMounted() {
+
+      },
+    }
+  </script>
+</connect-stripe-view>

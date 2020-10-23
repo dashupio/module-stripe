@@ -1,0 +1,54 @@
+<connect-stripe-config>
+  <div class="card mb-3">
+    <div class="card-header">
+      <b>Stripe Connector</b>
+    </div>
+    <div class="card-body">
+
+      <div class="mb-3">
+        <label class="form-label">
+          Client ID
+        </label>
+        <input class="form-control" name="client-id" ref="client-id" value={ props.connect.client } onchange={ (e) => onClient(e) } />
+      </div>
+
+      <div class="mb-3">
+        <label class="form-label">
+          Client Secret
+        </label>
+        <input class="form-control" name="client-secret" ref="client-secret" value={ props.connect.secret } onchange={ (e) => onSecret(e) } />
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    /**
+     * export default
+     */
+    export default class ConnectorStripeConfig {
+
+      /**
+       * on client id
+       */
+      onClient(e) {
+        // get value
+        const val = e.target.value;
+        
+        // set channel
+        this.props.set('client', val);
+      }
+
+      /**
+       * on clientSecret
+       */
+      onSecret(e) {
+        // get value
+        const val = e.target.value;
+        
+        // set channel
+        this.props.set('secret', val);
+      }
+    }
+  </script>
+</connect-stripe-config>
