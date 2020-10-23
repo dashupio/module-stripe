@@ -17,6 +17,7 @@
     "@dashup/eslint-config-dashup": "0.0.1",
     "@dashup/module": "file:../../../modules/dashup_module",
     "babel-plugin-add-module-exports": "^1.0.4",
+    "dot-prop": "^6.0.0",
     "stripe": "^8.114.0"
   }
 }
