@@ -115,6 +115,7 @@ export default class StripeConnect extends Struct {
     const productField = (productForm.get('data.fields') || []).find((f) => f.uuid === page.get('data.product.field'));
 
     // order products
+    const orderDiscount = order[orderField.name || orderField.uuid].discount;
     const orderProducts = order[orderField.name || orderField.uuid].products;
 
     // products
@@ -181,9 +182,12 @@ export default class StripeConnect extends Struct {
     
     // charge
     if (normalTotal) {
+      // check discount
+      const normalDiscount = orderDiscount ? parseFloat(orderDiscount.type === 'percent' ? (parseFloat(orderDiscount.value) / 100) * normalTotal : orderDiscount.value) : 0;
+
       // normal charge
       const charge = await stripe.charges.create({
-        amount   : parseInt(`${normalTotal * 100}`, 10),
+        amount   : parseInt(`${(normalTotal - normalDiscount) * 100}`, 10),
         currency : (payment.currency || 'usd').toLowerCase(),
         metadata : {
           page    : page.get('_id'),
@@ -201,6 +205,7 @@ export default class StripeConnect extends Struct {
         type     : 'normal',
         status   : charge.status,
         amount   : [normalTotal, (payment.currency || 'USD').toUpperCase()],
+        discount : [normalDiscount, (payment.currency || 'USD').toUpperCase()],
         customer : customer.id,
       });
     }
@@ -224,6 +229,9 @@ export default class StripeConnect extends Struct {
       const actualPrice = parseFloat((parseFloat(actualProduct.get(`${productField.name || productField.uuid}.price`) || 0) * parseInt(subscription.count || 0)).toFixed(2));
       const actualInterval = intervals[actualProduct.get(`${productField.name || productField.uuid}.period`) || 'monthly'];
 
+      // check discount
+      const actualDiscount = orderDiscount ? parseFloat(orderDiscount.type === 'percent' ? (parseFloat(orderDiscount.value) / 100) * actualPrice : orderDiscount.value) : 0;
+
       // let
       let product;
 
@@ -245,14 +253,14 @@ export default class StripeConnect extends Struct {
       })).data;
 
       // find price
-      const price = currentPrices.find((p) => p.unit_amount === parseInt(`${actualPrice * 100}`, 10) && p.recurring.interval === actualInterval[0] && p.recurring.interval_count === actualInterval[1]) || await stripe.prices.create({
+      const price = currentPrices.find((p) => p.unit_amount === parseInt(`${(actualPrice - actualDiscount) * 100}`, 10) && p.recurring.interval === actualInterval[0] && p.recurring.interval_count === actualInterval[1]) || await stripe.prices.create({
         product   : product.id,
         currency  : (payment.currency || 'usd').toLowerCase(),
         recurring : {
           interval       : actualInterval[0],
           interval_count : actualInterval[1],
         },
-        unit_amount : parseInt(`${actualPrice * 100}`, 10),
+        unit_amount : parseInt(`${(actualPrice - actualDiscount) * 100}`, 10),
       });
 
       // create subscription
@@ -272,6 +280,7 @@ export default class StripeConnect extends Struct {
         type     : 'subscription',
         status   : stripeSubscription.status,
         amount   : [actualPrice, (payment.currency || 'USD').toUpperCase(), actualProduct.get(`${productField.name || productField.uuid}.period`) || 'monthly'],
+        discount : [actualDiscount, (payment.currency || 'USD').toUpperCase(), actualProduct.get(`${productField.name || productField.uuid}.period`) || 'monthly'],
         customer : customer.id,
       })
     }));
