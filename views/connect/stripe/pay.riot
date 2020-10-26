@@ -1,7 +1,7 @@
 <connect-stripe-pay>
   <div class="connect-stripe-pay">
     <div id="stripe-element" />
-    <div class="alert alert-danger mt-3" if={ state.error }>
+    <div class="alert alert-danger mt-3 mb-0" if={ state.error }>
       { state.error }
     </div>
   </div>
@@ -70,6 +70,13 @@
 
               // create method
               stripe.createToken(card).then((result) => {
+                // check error
+                if (result.error) {
+                  return this.update({
+                    error : result.error.message,
+                  });
+                }
+
                 // payment method
                 this.props.enable(this.props.connect, {
                   token : result.token.id
@@ -78,7 +85,9 @@
             } else if (event.error) {
               // props disable
               this.props.disable();
-              this.update({ error : event.error.message });
+              this.update({
+                error : event.error.message,
+              });
             }
           });
         });
