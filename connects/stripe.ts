@@ -19,7 +19,6 @@ export default class StripeConnect extends Struct {
     // bind methods
     this.payAction = this.payAction.bind(this);
     this.saveAction = this.saveAction.bind(this);
-    this.sanitiseAction = this.sanitiseAction.bind(this);
   }
 
   /**
@@ -51,7 +50,9 @@ export default class StripeConnect extends Struct {
    */
   get data() {
     // return connect data
-    return {};
+    return {
+      protected : ['secret'],
+    };
   }
 
   /**
@@ -72,9 +73,8 @@ export default class StripeConnect extends Struct {
   get actions() {
     // return connect actions
     return {
-      pay      : this.payAction,
-      save     : this.saveAction,
-      sanitise : this.sanitiseAction,
+      pay  : this.payAction,
+      save : this.saveAction,
     };
   }
 
@@ -305,24 +305,6 @@ export default class StripeConnect extends Struct {
       // secret
       connect.secret = oldConnect.secret;
     }
-
-    // return connect
-    return { connect };
-  }
-
-  /**
-   * action method
-   *
-   * @param param0 
-   * @param connect 
-   * @param data 
-   */
-  async sanitiseAction({ req, dashup }, connect) {
-    // check dashup
-    if (!dashup) return;
-
-    // delete
-    connect.secret = 'SECRET';
 
     // return connect
     return { connect };
