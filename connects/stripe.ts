@@ -232,29 +232,24 @@ export default class StripeConnect extends Struct {
       // check discount
       const actualDiscount = orderDiscount ? parseFloat(orderDiscount.type === 'percent' ? (parseFloat(orderDiscount.value) / 100) * actualPrice : orderDiscount.value) : 0;
 
-      // let
-      let product;
-
       // try/catch get product
       try {
-        product = await stripe.products.retrieve(actualProduct.get('_id'));
-      } catch (e) {}
-
-      // create stripe product
-      if (!product) product = await stripe.products.create({
-        id   : actualProduct.get('_id'),
-        name : actualProduct.get(`${titleField.name || titleField.uuid}`),
-      });
+        // create
+        await stripe.products.create({
+          id   : actualProduct.get('_id'),
+          name : actualProduct.get(`${titleField.name || titleField.uuid}`),
+        });
+      } catch (e) { console.log(e) }
 
       // price
       const currentPrices = (await stripe.prices.list({
         limit   : 100,
-        product : product.id,
+        product : actualProduct.get('_id'),
       })).data;
 
       // find price
       const price = currentPrices.find((p) => p.unit_amount === parseInt(`${(actualPrice - actualDiscount) * 100}`, 10) && p.recurring.interval === actualInterval[0] && p.recurring.interval_count === actualInterval[1]) || await stripe.prices.create({
-        product   : product.id,
+        product   : actualProduct.get('_id'),
         currency  : (payment.currency || 'usd').toLowerCase(),
         recurring : {
           interval       : actualInterval[0],
