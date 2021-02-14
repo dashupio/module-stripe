@@ -170,12 +170,24 @@ export default class StripeConnect extends Struct {
 
     // create stripe
     const stripe = Stripe(connect.secret);
+    
+    // customer
+    let customer = null;
 
-    // Create a Customer:
-    const customer = await stripe.customers.create({
-      email  : order[orderField.name || orderField.name].information.email,
-      source : payment.value.token,
-    });
+    // try/catch
+    try {
+      // Create a Customer:
+      customer = await stripe.customers.create({
+        email  : order[orderField.name || orderField.name].information.email,
+        source : payment.value.token,
+      });
+    } catch (e) {
+      // error
+      return {
+        type  : e.type,
+        error : e.message,
+      };
+    }
 
     // payments
     const payments = [];
@@ -184,30 +196,44 @@ export default class StripeConnect extends Struct {
     if (normalTotal) {
       // check discount
       const normalDiscount = orderDiscount ? parseFloat(orderDiscount.type === 'percent' ? (parseFloat(orderDiscount.value) / 100) * normalTotal : orderDiscount.value) : 0;
-      
+
       // get destination
-      const destination = orderProducts.find((p) => (p.opts || {}).stripe_destination) ? orderProducts.find((p) => (p.opts || {}).stripe_destination).opts.stripe_destination : null;
+      const destination = orderProducts.find((p) => (p.opts || {}).stripe_destination)
+        ? orderProducts.find((p) => (p.opts || {}).stripe_destination).opts.stripe_destination
+        : null;
 
-      // normal charge
-      const charge = await stripe.charges.create({
-        amount   : parseInt(`${(normalTotal - normalDiscount) * 100}`, 10),
-        currency : (payment.currency || 'usd').toLowerCase(),
-        metadata : {
-          page    : page.get('_id'),
-          order   : order._id,
-          connect : payment.uuid,
-        },
-        customer      : customer.id,
-        description   : `Order #${order._id}`,
-        receipt_email : order[orderField.name || orderField.name].information.email,
+      // set charge
+      let charge = null;
 
-        ...(destination ? {
-          transfer_data : {
-            amount      : Math.round(parseInt(`${(normalTotal - normalDiscount) * 100}`, 10) * .9), // @todo enable config percent fee
-            destination : payment.destination,
+      // try/catch
+      try {
+        // normal charge
+        charge = await stripe.charges.create({
+          amount   : parseInt(`${(normalTotal - normalDiscount) * 100}`, 10),
+          currency : (payment.currency || 'usd').toLowerCase(),
+          metadata : {
+            page    : page.get('_id'),
+            order   : order._id,
+            connect : payment.uuid,
           },
-        } : {}),
-      });
+          customer      : customer.id,
+          description   : `Order #${order._id}`,
+          receipt_email : order[orderField.name || orderField.name].information.email,
+
+          ...(destination ? {
+            transfer_data : {
+              amount      : Math.round(parseInt(`${(normalTotal - normalDiscount) * 100}`, 10) * .9), // @todo enable config percent fee
+              destination : payment.destination,
+            },
+          } : {}),
+        });
+      } catch (e) {
+        // error
+        return {
+          type  : e.type,
+          error : e.message,
+        };
+      }
 
       // push payments
       payments.push({
@@ -228,6 +254,9 @@ export default class StripeConnect extends Struct {
       'quarterly'    : ['month', 3],
       'semiannually' : ['month', 6],
     };
+
+    // err
+    let subscriptionErr = null;
 
     // subscriptions
     await Promise.all(subscriptions.map(async (subscription) => {
@@ -268,16 +297,31 @@ export default class StripeConnect extends Struct {
         unit_amount : parseInt(`${(actualPrice - actualDiscount) * 100}`, 10),
       });
 
-      // create subscription
-      const stripeSubscription = await stripe.subscriptions.create({
-        items : [
-          {
-            price    : price.id,
-            quantity : subscription.count,
-          },
-        ],
-        customer : customer.id,
-      });
+      // let null
+      let stripeSubscription = null;
+
+      // try/catch
+      try {
+        // create subscription
+        stripeSubscription = await stripe.subscriptions.create({
+          items : [
+            {
+              price    : price.id,
+              quantity : subscription.count,
+            },
+          ],
+          customer : customer.id,
+        });
+      } catch (e) {
+        // error
+        subscriptionErr = {
+          type  : e.type,
+          error : e.message,
+        };
+
+        // return
+        return;
+      }
 
       // push payment
       payments.push({
@@ -289,6 +333,9 @@ export default class StripeConnect extends Struct {
         customer : customer.id,
       });
     }));
+
+    // return error
+    if (subscriptionErr) return subscriptionErr;
 
     // return payments
     return { payments };
