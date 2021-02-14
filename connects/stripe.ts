@@ -184,6 +184,9 @@ export default class StripeConnect extends Struct {
     if (normalTotal) {
       // check discount
       const normalDiscount = orderDiscount ? parseFloat(orderDiscount.type === 'percent' ? (parseFloat(orderDiscount.value) / 100) * normalTotal : orderDiscount.value) : 0;
+      
+      // get destination
+      const destination = orderProducts.find((p) => (p.opts || {}).stripe_destination) ? orderProducts.find((p) => (p.opts || {}).stripe_destination).opts.stripe_destination : null;
 
       // normal charge
       const charge = await stripe.charges.create({
@@ -197,6 +200,13 @@ export default class StripeConnect extends Struct {
         customer      : customer.id,
         description   : `Order #${order._id}`,
         receipt_email : order[orderField.name || orderField.name].information.email,
+
+        ...(destination ? {
+          transfer_data : {
+            amount      : Math.round(parseInt(`${(normalTotal - normalDiscount) * 100}`, 10) * .9), // @todo enable config percent fee
+            destination : payment.destination,
+          },
+        } : {}),
       });
 
       // push payments
@@ -239,7 +249,7 @@ export default class StripeConnect extends Struct {
           id   : actualProduct.get('_id'),
           name : actualProduct.get(`${titleField.name || titleField.uuid}`),
         });
-      } catch (e) { console.log(e) }
+      } catch (e) {}
 
       // price
       const currentPrices = (await stripe.prices.list({
@@ -277,7 +287,7 @@ export default class StripeConnect extends Struct {
         amount   : [actualPrice, (payment.currency || 'USD').toUpperCase(), actualProduct.get(`${productField.name || productField.uuid}.period`) || 'monthly'],
         discount : [actualDiscount, (payment.currency || 'USD').toUpperCase(), actualProduct.get(`${productField.name || productField.uuid}.period`) || 'monthly'],
         customer : customer.id,
-      })
+      });
     }));
 
     // return payments
@@ -296,7 +306,7 @@ export default class StripeConnect extends Struct {
     if (!dashup) return;
 
     // check secret
-    if (connect.secret === 'SECRET') {
+    if (connect.secret === 'PROTECTED') {
       // secret
       connect.secret = oldConnect.secret;
     }
