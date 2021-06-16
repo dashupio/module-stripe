@@ -10,14 +10,15 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
-    "@babel/core": "^7.11.6",
-    "@babel/plugin-transform-runtime": "^7.11.5",
-    "@babel/plugin-transform-typescript": "^7.11.0",
-    "@babel/preset-env": "^7.11.5",
+    "@babel/core": "^7.13.15",
+    "@babel/plugin-transform-runtime": "^7.13.15",
+    "@babel/plugin-transform-typescript": "^7.13.0",
+    "@babel/preset-env": "^7.13.15",
     "@dashup/eslint-config-dashup": "0.0.1",
-    "@dashup/module": "^1.0.3",
+    "@dashup/module": "^2.0.2",
+    "@dashup/ui": "0.0.1",
     "babel-plugin-add-module-exports": "^1.0.4",
-    "dot-prop": "^6.0.0",
-    "stripe": "^8.114.0"
+    "dot-prop": "^6.0.1",
+    "stripe": "^8.144.0"
   }
 }
