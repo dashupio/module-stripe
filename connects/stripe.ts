@@ -63,7 +63,7 @@ export default class StripeConnect extends Struct {
     return {
       pay    : 'connect/stripe/pay',
       view   : 'connect/stripe/view',
-      config : 'connect/stripe/config',
+      config : 'connect/stripe',
     };
   }
 
