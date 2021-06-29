@@ -15,8 +15,10 @@
     "@babel/plugin-transform-typescript": "^7.13.0",
     "@babel/preset-env": "^7.13.15",
     "@dashup/eslint-config-dashup": "0.0.1",
-    "@dashup/module": "^2.0.2",
+    "@dashup/module": "^2.0.3",
     "@dashup/ui": "0.0.1",
+    "@stripe/react-stripe-js": "^1.4.1",
+    "@stripe/stripe-js": "^1.15.1",
     "babel-plugin-add-module-exports": "^1.0.4",
     "dot-prop": "^6.0.1",
     "stripe": "^8.144.0"

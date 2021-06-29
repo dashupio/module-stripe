@@ -17,14 +17,14 @@ const ConnectStripe = (props = {}) => {
           <label className="form-label">
             Client ID
           </label>
-          <input className="form-control" name="client-id" ref="client-id" value={ props.connect.client } onChange={ (e) => props.setConnect('client', e.target.value) } />
+          <input className="form-control" name="client-id" value={ props.connect.client } onChange={ (e) => props.setConnect('client', e.target.value) } />
         </div>
 
         <div className="mb-3">
           <label className="form-label">
             Client Secret
           </label>
-          <input className="form-control" name="client-secret" ref="client-secret" value={ props.connect.secret } onChange={ (e) => props.setConnect('secret', e.target.value) } />
+          <input className="form-control" name="client-secret"value={ props.connect.secret } onChange={ (e) => props.setConnect('secret', e.target.value) } />
         </div>
 
       </div>
